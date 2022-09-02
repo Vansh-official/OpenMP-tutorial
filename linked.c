@@ -17,13 +17,11 @@ struct node {
 
 int fib(int n) {
    int x, y;
-   if (n < 2) {
+   if (n < 2)
       return (n);
-   } else {
-      x = fib(n - 1);
-      y = fib(n - 2);
-      return (x + y);
-   }
+   x = fib(n - 1);
+   y = fib(n - 2);
+   return (x + y);
 }
 
 void processwork(struct node* p)
@@ -66,24 +64,16 @@ int main(int argc, char *argv[]) {
    p = init_list(p);
    head = p;
 
-   int count = 0;
-   while (p != NULL)
-   {
-      count++;
-      p = p->next;
-   }
-   p = head;
-   struct node* arr[count];
-   for (int  i = 0; i < count; i++)
-   {
-      arr[i] = p;
-      p = p->next;
-   }
-
    start = omp_get_wtime();
-   #pragma omp parallel for
-      for (int i = 0; i < count; i++)
-         processwork(arr[i]);
+   #pragma omp parallel
+   {
+      #pragma omp single
+      {
+         for (; p != NULL; p = p->next)
+            #pragma omp task firstprivate(p)
+               processwork(p);
+      }
+   }
 
    end = omp_get_wtime();
    p = head;
